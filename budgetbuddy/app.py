@@ -18,10 +18,12 @@ def run_app():
         st.title("Dashboard")
         # Default monthly summary
         st.subheader("All Recurring Bills")
-        recs = get_recurring()
-        if recs:
-            df_recs = pd.DataFrame(recs)
-            st.write(df_recs[['name','amount','frequency','next_due','category']])
+        recs_raw = get_recurring()
+        recs = [dict(r) for r in recs_raw]
+        df_recs = pd.DataFrame(recs)
+        if not df_recs.empty:
+            display_cols = [col for col in ['name','amount','frequency','next_due','category'] if col in df_recs.columns]
+            st.write(df_recs[display_cols])
         else:
             st.write("No recurring bills defined.")
         
