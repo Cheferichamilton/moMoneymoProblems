@@ -73,7 +73,7 @@ def run_app():
         # Monthly Bills for Selected Period
         st.markdown("---")
         # Label for current period, e.g., 'March 2025'
-            period_label = start_date.strftime('%B %Y')
+        period_label = start_date.strftime('%B %Y')
         st.subheader(f"Bills for {period_label}")
         # Filter bills within start and end dates
         df_rec['due'] = pd.to_datetime(df_rec['next_due']).dt.date
