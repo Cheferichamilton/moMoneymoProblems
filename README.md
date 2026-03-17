@@ -4,6 +4,30 @@ A simple budgeting tool with pay schedule and recurring bills, powered by Stream
 
 ## Windows Quick Start
 
+For a zero-step launch on Windows:
+
+1. Clone the repo:
+   ```powershell
+   git clone https://github.com/Cheferichamilton/moMoneymoProblems.git
+   cd moMoneymoProblems
+   ```
+2. Double-click **start.bat** in File Explorer.
+   - This will:
+     - Create (if missing) and activate a virtual environment
+     - Install required Python packages from `requirements.txt`
+     - Launch the Streamlit app
+   - When you're done, press any key in the console to exit.
+
+Troubleshooting:
+- If the app window never appears or closes immediately, open PowerShell in the repo folder and run:
+  ```powershell
+  .\start.bat
+  ```
+  to view any error messages.
+- Make sure `requirements.txt` lists `streamlit`, `pandas`, and `plotly`.
+- You can also manually inspect or edit `start.bat` if you need custom paths.
+
+
 For a one-click Windows experience:
 
 1. Clone the repo:
