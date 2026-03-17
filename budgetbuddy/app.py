@@ -48,7 +48,7 @@ def run_app():
                     from budgetbuddy.db import update_recurring_next_due
                     update_recurring_next_due(r['id'], r['next_due'])
                     st.success(f"Recorded payment and updated next due for {r['name']}")
-                    st.experimental_rerun()
+                    # refresh page
         else:
             st.write(f"No bills due in next {span_days} days.")
     # Transactions Page
@@ -99,7 +99,7 @@ def run_app():
                 if c5.button("Update", key=f"inc_update_{i['id']}"):
                     update_income(i['id'], name, amount, freq, next_due.isoformat())
                     st.success(f"Updated income {name}")
-                    st.experimental_rerun()
+                    # Please refresh the page to see updates
                 if c5.button("Delete", key=f"inc_delete_{i['id']}"):
                     delete_income(i['id'])
                     st.success(f"Deleted income {name}")
