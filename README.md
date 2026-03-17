@@ -13,7 +13,18 @@ pip install --user git+https://github.com/Cheferichamilton/moMoneymoProblems.git
 
 On Windows PowerShell or CMD:
 ```powershell
+# If you have the Python launcher installed:
+py -3 -m pip install --user git+https://github.com/Cheferichamilton/moMoneymoProblems.git
+# Or if `py` isn't available but `python` is in your PATH:
 python -m pip install --user git+https://github.com/Cheferichamilton/moMoneymoProblems.git
+```
+
+After install, in the same shell:
+```powershell
+# To run Budget Buddy:
+py -3 -m budgetbuddy
+# Or if you installed entry script and it's on PATH:
+budgetbuddy
 ```
 
 ## Usage
