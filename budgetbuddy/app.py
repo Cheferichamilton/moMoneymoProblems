@@ -15,6 +15,70 @@ def run_app():
     )
     # Dashboard Page
     if page == "Dashboard":
+        st.title("Dashboard Overview")
+        # Fetch data
+        start_date, end_date = None, None
+        today = datetime.today().date()
+        ps = get_pay_schedule()
+        # Default to this month
+        start_date = today.replace(day=1)
+        next_month = start_date + timedelta(days=32)
+        next_month = next_month.replace(day=1)
+        end_date = next_month - timedelta(days=1)
+        # Transactions
+        txns = get_transactions(start_date.isoformat(), end_date.isoformat())
+        df_tx = pd.DataFrame(txns)
+        total_expenses = df_tx['amount'].sum() if not df_tx.empty else 0.0
+        # Incomes
+        incs = get_incomes()
+        # Filter incomes due in this period
+        df_inc = pd.DataFrame([dict(i) for i in incs])
+        if not df_inc.empty:
+            df_inc['due_date'] = pd.to_datetime(df_inc['next_due']).dt.date
+            incs_due = df_inc[(df_inc['due_date'] >= start_date) & (df_inc['due_date'] <= end_date)]
+            total_income = incs_due['amount'].sum() if not incs_due.empty else df_inc['amount'].sum()
+        else:
+            total_income = 0.0
+        # Net savings
+        net = total_income - total_expenses
+        # Upcoming bills (next 30 days)
+        recs = [dict(r) for r in get_recurring()]
+        df_rec = pd.DataFrame(recs)
+        if not df_rec.empty:
+            df_rec['due'] = pd.to_datetime(df_rec['next_due']).dt.date
+            upcoming = df_rec[df_rec['due'] <= (today + timedelta(days=30))]
+            upcoming_count = len(upcoming)
+        else:
+            upcoming_count = 0
+        # Display metrics
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("Total Income", f"${total_income:,.2f}")
+        m2.metric("Total Expenses", f"${total_expenses:,.2f}")
+        m3.metric("Net Savings", f"${net:,.2f}")
+        m4.metric("Upcoming Bills (30d)", f"{upcoming_count}")
+        # Charts
+        st.markdown("---")
+        if not df_tx.empty:
+            st.subheader("Expenses by Category")
+            fig1 = px.pie(df_tx, names='category', values='amount', title='Expenses Split')
+            st.plotly_chart(fig1, use_container_width=True)
+            st.subheader("Spending Over Time")
+            df_time = df_tx.copy()
+            df_time['date'] = pd.to_datetime(df_time['date']).dt.date
+            df_time_group = df_time.groupby('date')['amount'].sum().reset_index()
+            fig2 = px.bar(df_time_group, x='date', y='amount', title='Daily Spend')
+            st.plotly_chart(fig2, use_container_width=True)
+        else:
+            st.info("No transactions for this period.")
+        # Upcoming Bills table
+        st.markdown("---")
+        st.subheader("Upcoming Bills in Next 30 Days")
+        if not df_rec.empty and upcoming_count>0:
+            upcoming_display = upcoming[['name','amount','frequency','next_due','category']]
+            st.table(upcoming_display)
+        else:
+            st.write("No upcoming bills in the next 30 days.")
+        st.markdown("---")
         st.title("Dashboard")
         # Default monthly summary
         st.subheader("All Recurring Bills")
