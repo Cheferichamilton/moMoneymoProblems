@@ -1,4 +1,6 @@
-@echo off
+@echo off
+REM Ensure we're in the script's directory
+cd /d %~dp0
 REM ------------------------------
 REM Budget Buddy Launcher for Windows
 REM ------------------------------
