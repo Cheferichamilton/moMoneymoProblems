@@ -25,7 +25,7 @@ IF NOT EXIST venv (
 )
 
 echo Launching Budget Buddy...
-python -m budgetbuddy
+python -m budgetbuddy.cli
 
 echo.
 echo Press any key to exit...
