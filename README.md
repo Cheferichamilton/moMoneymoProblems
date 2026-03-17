@@ -10,6 +10,25 @@ A simple budgeting tool with pay schedule and recurring bills, powered by Stream
 
 ## Installation
 
+After cloning the repo, run the appropriate bootstrap script to set up a virtual environment and install dependencies:
+
+On macOS/Linux:
+```bash
+./bootstrap.sh
+```
+
+On Windows PowerShell:
+```powershell
+.\bootstrap.ps1
+```
+
+Once complete, activate the virtual environment and run:
+```bash
+budgetbuddy
+# or
+python -m budgetbuddy
+```
+
 Install directly from GitHub:
 
 On macOS/Linux:
