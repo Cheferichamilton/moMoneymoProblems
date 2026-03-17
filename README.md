@@ -18,13 +18,19 @@ python -m pip install --user git+https://github.com/Cheferichamilton/moMoneymoPr
 
 ## Usage
 
-After installation, run:
+Open any terminal (macOS/Linux, Windows PowerShell, CMD, or VSCode integrated terminal). Then run:
 
 ```bash
 budgetbuddy
 ```
 
-This will launch the Streamlit UI in your browser.
+If `budgetbuddy` isn't recognized (common on Windows), use:
+
+```bash
+python -m budgetbuddy
+```
+
+Either will launch the Streamlit UI in your browser.
 
 ## Updating
 
