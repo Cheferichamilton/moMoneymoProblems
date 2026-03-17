@@ -6,8 +6,14 @@ A simple budgeting tool with pay schedule and recurring bills, powered by Stream
 
 Install directly from GitHub:
 
+On macOS/Linux:
 ```bash
 pip install --user git+https://github.com/Cheferichamilton/moMoneymoProblems.git
+```
+
+On Windows PowerShell or CMD:
+```powershell
+python -m pip install --user git+https://github.com/Cheferichamilton/moMoneymoProblems.git
 ```
 
 ## Usage
