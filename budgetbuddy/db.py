@@ -126,6 +126,34 @@ def get_pay_schedule():
 
 
 def set_pay_schedule(pay_amount: float, pay_frequency: str, next_pay_date: str):
+    # ... existing code ...
+
+def update_recurring_next_due(recurring_id: int, current_due: str):
+    """
+    After paying a recurring bill, update its next_due based on frequency.
+    """
+    # Compute next due date
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT frequency FROM recurring WHERE id = ?', (recurring_id,))
+    row = cur.fetchone()
+    if not row:
+        conn.close()
+        return
+    freq = row['frequency']
+    from datetime import datetime, timedelta
+    due_date = datetime.fromisoformat(current_due).date()
+    mapping = {
+        'daily': timedelta(days=1),
+        'weekly': timedelta(weeks=1),
+        'biweekly': timedelta(weeks=2),
+        'monthly': timedelta(days=30)
+    }
+    delta = mapping.get(freq, timedelta(days=30))
+    new_due = due_date + delta
+    cur.execute('UPDATE recurring SET next_due = ? WHERE id = ?', (new_due.isoformat(), recurring_id))
+    conn.commit()
+    conn.close()
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(

@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from .db import init_db, get_categories, add_category, get_transactions, add_transaction, get_recurring, add_recurring, get_pay_schedule, set_pay_schedule
+from budgetbuddy.db import init_db, get_categories, add_category, get_transactions, add_transaction, get_recurring, add_recurring, get_pay_schedule, set_pay_schedule
 import plotly.express as px
 from datetime import datetime, timedelta
 
@@ -16,51 +16,41 @@ def run_app():
     # Dashboard Page
     if page == "Dashboard":
         st.title("Dashboard")
-        date_range = st.selectbox("View", ["This Week", "This Pay Period", "This Month", "6 Months"])
-        today = datetime.today().date()
-        start_date = end_date = None
-        ps = get_pay_schedule()
-        if date_range == "This Week":
-            start_date = today - timedelta(days=today.weekday())
-            end_date = start_date + timedelta(days=6)
-        elif date_range == "This Month":
-            start_date = today.replace(day=1)
-            next_month = start_date + timedelta(days=32)
-            next_month = next_month.replace(day=1)
-            end_date = next_month - timedelta(days=1)
-        elif date_range == "6 Months":
-            start_date = today - timedelta(days=180)
-            end_date = today
-        elif date_range == "This Pay Period":
-            if ps:
-                next_pay = datetime.fromisoformat(ps['next_pay_date']).date()
-                freq = ps['pay_frequency']
-                mapping = {'weekly':7, 'biweekly':14, 'semimonthly':15, 'monthly':30}
-                period_days = mapping.get(freq, 30)
-                if next_pay >= today:
-                    start_date = next_pay - timedelta(days=period_days)
-                    end_date = next_pay
-                else:
-                    start_date = next_pay
-                    end_date = next_pay + timedelta(days=period_days)
-            else:
-                st.warning("Please set your pay schedule first.")
-        if start_date and end_date:
-            st.write(f"From {start_date} to {end_date}")
-            df = pd.DataFrame(get_transactions(start_date.isoformat(), end_date.isoformat()))
-            total_spent = df['amount'].sum() if not df.empty else 0
-            st.subheader("Transactions")
-            st.write(df)
-            fig = px.pie(df, names='category', values='amount', title='Spending by Category')
-            st.plotly_chart(fig)
-            st.metric("Total Spent", f"${total_spent:,.2f}")
-            if date_range == "This Pay Period" and ps:
-                income = ps['pay_amount']
-                savings = income - total_spent
-                st.metric("Income", f"${income:,.2f}")
-                st.metric("Savings", f"${savings:,.2f}")
+        # Default monthly summary
+        st.subheader("All Recurring Bills")
+        recs = get_recurring()
+        if recs:
+            df_recs = pd.DataFrame(recs)
+            st.write(df_recs[['name','amount','frequency','next_due','category']])
         else:
-            st.write("Select a date range")
+            st.write("No recurring bills defined.")
+        
+        # Upcoming bills view
+        st.subheader("Upcoming Bills")
+        today = datetime.today().date()
+        upcoming_span = st.selectbox("Show due in next:", ["7 days","30 days","60 days","90 days"], index=1)
+        days_map = {"7 days":7, "30 days":30, "60 days":60, "90 days":90}
+        span_days = days_map[upcoming_span]
+        cutoff = today + timedelta(days=span_days)
+        due_recs = [r for r in recs if datetime.fromisoformat(r['next_due']).date() <= cutoff]
+        if due_recs:
+            for r in due_recs:
+                c1, c2, c3, c4, c5 = st.columns([2,1,1,1,1])
+                c1.write(r['name'])
+                c2.write(r['next_due'])
+                c3.write(f"${r['amount']:,.2f}")
+                c4.write(r['category'])
+                btn_key = f"paid_{r['id']}"
+                if c5.button("Mark Paid", key=btn_key):
+                    # record transaction
+                    add_transaction(r['next_due'], r['amount'], r['category_id'], f"Paid: {r['name']}")
+                    # update next due
+                    from budgetbuddy.db import update_recurring_next_due
+                    update_recurring_next_due(r['id'], r['next_due'])
+                    st.success(f"Recorded payment and updated next due for {r['name']}")
+                    st.experimental_rerun()
+        else:
+            st.write(f"No bills due in next {span_days} days.")
     # Transactions Page
     elif page == "Transactions":
         st.title("Add Transaction")
