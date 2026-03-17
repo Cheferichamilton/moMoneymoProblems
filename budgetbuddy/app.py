@@ -70,14 +70,28 @@ def run_app():
             st.plotly_chart(fig2, use_container_width=True)
         else:
             st.info("No transactions for this period.")
-        # Upcoming Bills table
+        # Monthly Bills for Selected Period
         st.markdown("---")
-        st.subheader("Upcoming Bills in Next 30 Days")
-        if not df_rec.empty and upcoming_count>0:
-            upcoming_display = upcoming[['name','amount','frequency','next_due','category']]
-            st.table(upcoming_display)
+        period_label = date_range
+        st.subheader(f"Bills for {period_label}")
+        # Filter bills within start and end dates
+        df_rec['due'] = pd.to_datetime(df_rec['next_due']).dt.date
+        period_bills = df_rec[(df_rec['due'] >= start_date) & (df_rec['due'] <= end_date)]
+        if not period_bills.empty:
+            st.table(period_bills[['name','amount','due','category']])
+            total_bills = period_bills['amount'].sum()
+            st.metric(
+                "Total Bills", f"${total_bills:,.2f}"
+            )
+            leftover = total_income - total_bills
+            st.metric(
+                "Projected Savings After Bills", f"${leftover:,.2f}"
+            )
+            if total_income > 0:
+                pct = total_bills / total_income
+                st.progress(min(max(pct, 0), 1))
         else:
-            st.write("No upcoming bills in the next 30 days.")
+            st.write(f"No bills due in {period_label.lower()}.")
         st.markdown("---")
         st.title("Dashboard")
         # Default monthly summary
