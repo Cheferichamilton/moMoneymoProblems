@@ -2,6 +2,25 @@
 
 A simple budgeting tool with pay schedule and recurring bills, powered by Streamlit.
 
+## Windows Quick Start
+
+For a one-click Windows experience:
+
+1. Clone the repo:
+   ```powershell
+   git clone https://github.com/Cheferichamilton/moMoneymoProblems.git
+   ```
+2. Open the folder in Explorer and double-click **start.bat**.
+
+This script will:
+- Detect or install a Python virtual environment
+- Install all dependencies automatically
+- Launch the Budget Buddy app
+
+When you’re done, press any key in the console to exit.
+
+---
+
 ## Prerequisites
 
 - Python 3.7+ installed on your system.
