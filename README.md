@@ -52,6 +52,22 @@ py -3 -m budgetbuddy
 budgetbuddy
 ```
 
+## VSCode Setup
+
+If you’re using VSCode, follow these steps for smooth sailing:
+
+1. Open the VSCode Command Palette (Ctrl+Shift+P) and choose **Python: Select Interpreter**. Select the `.venv` interpreter we just created.
+2. Open the integrated terminal (Ctrl+`) and ensure your prompt shows `(venv)`.
+   - If not active, run:
+     - On Windows: `.\\venv\\Scripts\\Activate.ps1`
+     - On macOS/Linux: `source .venv/bin/activate`
+3. In the same integrated terminal, run:
+   ```bash
+   python -m budgetbuddy
+   ```
+
+This will start your Streamlit app within the VSCode terminal environment.
+
 ## Usage
 
 Open any terminal (macOS/Linux, Windows PowerShell, CMD, or VSCode integrated terminal). Then run:
