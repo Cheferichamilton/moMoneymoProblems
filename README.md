@@ -2,6 +2,12 @@
 
 A simple budgeting tool with pay schedule and recurring bills, powered by Streamlit.
 
+## Prerequisites
+
+- Python 3.7+ installed on your system.
+- On Windows, be sure to check "Add Python to PATH" during installation so that `python`, `pip`, or `py` commands are recognized.
+- If these commands are not available, reinstall Python from https://python.org or adjust your PATH environment variable.
+
 ## Installation
 
 Install directly from GitHub:
