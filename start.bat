@@ -18,7 +18,7 @@ IF NOT EXIST venv (
   echo Activating venv and installing dependencies...
   call venv\Scripts\activate.bat
   pip install --upgrade pip
-  pip install --editable .
+  pip install .
 ) ELSE (
   echo Activating virtual environment...
   call venv\Scripts\activate.bat
