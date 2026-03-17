@@ -1,5 +1,6 @@
 import sqlite3
 from sqlite3 import Connection
+from datetime import datetime, timedelta
 
 def get_connection() -> Connection:
     conn = sqlite3.connect('budget.db', check_same_thread=False)
@@ -10,14 +11,14 @@ def get_connection() -> Connection:
 def init_db():
     conn = get_connection()
     cur = conn.cursor()
-    # Categories table
+    # Categories
     cur.execute('''
         CREATE TABLE IF NOT EXISTS categories (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE
         )
     ''')
-    # Transactions (both one-time and individual occurrences)
+    # Transactions
     cur.execute('''
         CREATE TABLE IF NOT EXISTS transactions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,7 +41,7 @@ def init_db():
             FOREIGN KEY(category_id) REFERENCES categories(id)
         )
     ''')
-    # Pay schedule (one row only)
+    # Pay schedule
     cur.execute('''
         CREATE TABLE IF NOT EXISTS pay_schedule (
             id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -52,8 +53,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Helper functions
-
+# Category operations
 def get_categories():
     conn = get_connection()
     cur = conn.cursor()
@@ -62,7 +62,6 @@ def get_categories():
     conn.close()
     return rows
 
-
 def add_category(name: str):
     conn = get_connection()
     cur = conn.cursor()
@@ -70,8 +69,8 @@ def add_category(name: str):
     conn.commit()
     conn.close()
 
-
-def add_transaction(date: str, amount: float, category_id: int, description: str = ''):
+# Transaction operations
+def add_transaction(date: str, amount: float, category_id: int = None, description: str = ''):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -81,22 +80,22 @@ def add_transaction(date: str, amount: float, category_id: int, description: str
     conn.commit()
     conn.close()
 
-
 def get_transactions(start_date=None, end_date=None):
     conn = get_connection()
     cur = conn.cursor()
-    query = 'SELECT t.*, c.name as category FROM transactions t LEFT JOIN categories c ON t.category_id = c.id'
+    sql = 'SELECT t.*, c.name as category FROM transactions t LEFT JOIN categories c ON t.category_id = c.id'
     params = []
     if start_date and end_date:
-        query += ' WHERE date BETWEEN ? AND ?'
+        sql += ' WHERE date BETWEEN ? AND ?'
         params = [start_date, end_date]
-    cur.execute(query, params)
+    cur.execute(sql, params)
     rows = cur.fetchall()
     conn.close()
     return rows
 
+# Recurring bills
 
-def add_recurring(name: str, amount: float, category_id: int, frequency: str, next_due: str):
+def add_recurring(name: str, amount: float, category_id: int = None, frequency: str = 'monthly', next_due: str = None):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -106,7 +105,6 @@ def add_recurring(name: str, amount: float, category_id: int, frequency: str, ne
     conn.commit()
     conn.close()
 
-
 def get_recurring():
     conn = get_connection()
     cur = conn.cursor()
@@ -115,6 +113,7 @@ def get_recurring():
     conn.close()
     return rows
 
+# Pay schedule
 
 def get_pay_schedule():
     conn = get_connection()
@@ -124,36 +123,8 @@ def get_pay_schedule():
     conn.close()
     return row
 
-
 def set_pay_schedule(pay_amount: float, pay_frequency: str, next_pay_date: str):
-    # ... existing code ...
-
-def update_recurring_next_due(recurring_id: int, current_due: str):
-    """
-    After paying a recurring bill, update its next_due based on frequency.
-    """
-    # Compute next due date
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute('SELECT frequency FROM recurring WHERE id = ?', (recurring_id,))
-    row = cur.fetchone()
-    if not row:
-        conn.close()
-        return
-    freq = row['frequency']
-    from datetime import datetime, timedelta
-    due_date = datetime.fromisoformat(current_due).date()
-    mapping = {
-        'daily': timedelta(days=1),
-        'weekly': timedelta(weeks=1),
-        'biweekly': timedelta(weeks=2),
-        'monthly': timedelta(days=30)
-    }
-    delta = mapping.get(freq, timedelta(days=30))
-    new_due = due_date + delta
-    cur.execute('UPDATE recurring SET next_due = ? WHERE id = ?', (new_due.isoformat(), recurring_id))
-    conn.commit()
-    conn.close()
+    """Upsert single pay schedule entry (id=1)."""
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -167,5 +138,31 @@ def update_recurring_next_due(recurring_id: int, current_due: str):
         ''',
         (pay_amount, pay_frequency, next_pay_date)
     )
+    conn.commit()
+    conn.close()
+
+# Advance recurring bill due date
+def update_recurring_next_due(recurring_id: int, current_due: str):
+    """
+    After marking a recurring bill paid, bump its next_due based on frequency.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT frequency FROM recurring WHERE id = ?', (recurring_id,))
+    row = cur.fetchone()
+    if not row:
+        conn.close()
+        return
+    freq = row['frequency']
+    due_date = datetime.fromisoformat(current_due).date()
+    mapping = {
+        'daily': timedelta(days=1),
+        'weekly': timedelta(weeks=1),
+        'biweekly': timedelta(weeks=2),
+        'monthly': timedelta(days=30)
+    }
+    delta = mapping.get(freq, timedelta(days=30))
+    new_due = due_date + delta
+    cur.execute('UPDATE recurring SET next_due = ? WHERE id = ?', (new_due.isoformat(), recurring_id))
     conn.commit()
     conn.close()
