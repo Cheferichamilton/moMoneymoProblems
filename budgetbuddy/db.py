@@ -42,6 +42,39 @@ def init_db():
         )
     ''')
     # Pay schedule
+    # Incomes table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS incomes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            amount REAL NOT NULL,
+            frequency TEXT NOT NULL,
+            next_due TEXT NOT NULL
+        )
+    ''')
+    # Incomes table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS incomes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            amount REAL NOT NULL,
+            frequency TEXT NOT NULL,
+            next_due TEXT NOT NULL
+        )
+    ''')
+    # Incomes table
+    cur.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS incomes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            amount REAL NOT NULL,
+            frequency TEXT NOT NULL,
+            next_due TEXT NOT NULL
+        )
+        '''
+    )
+
     cur.execute('''
         CREATE TABLE IF NOT EXISTS pay_schedule (
             id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -142,6 +175,66 @@ def set_pay_schedule(pay_amount: float, pay_frequency: str, next_pay_date: str):
     conn.close()
 
 # Advance recurring bill due date
+def update_recurring_next_due(recurring_id: int, current_due: str):
+    """
+    After marking a recurring bill paid, bump its next_due based on frequency.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT frequency FROM recurring WHERE id = ?', (recurring_id,))
+    row = cur.fetchone()
+    if not row:
+        conn.close()
+        return
+    freq = row['frequency']
+    due_date = datetime.fromisoformat(current_due).date()
+    mapping = {
+        'daily': timedelta(days=1),
+        'weekly': timedelta(weeks=1),
+        'biweekly': timedelta(weeks=2),
+        'monthly': timedelta(days=30)
+    }
+    delta = mapping.get(freq, timedelta(days=30))
+    new_due = due_date + delta
+    cur.execute('UPDATE recurring SET next_due = ? WHERE id = ?', (new_due.isoformat(), recurring_id))
+    conn.commit()
+    conn.close()
+
+# Income operations
+def add_income(name: str, amount: float, frequency: str, next_due: str):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        'INSERT INTO incomes (name, amount, frequency, next_due) VALUES (?, ?, ?, ?)',
+        (name, amount, frequency, next_due)
+    )
+    conn.commit()
+    conn.close()
+
+def get_incomes():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM incomes')
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def update_income(income_id: int, name: str, amount: float, frequency: str, next_due: str):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        'UPDATE incomes SET name=?, amount=?, frequency=?, next_due=? WHERE id=?',
+        (name, amount, frequency, next_due, income_id)
+    )
+    conn.commit()
+    conn.close()
+
+def delete_income(income_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute('DELETE FROM incomes WHERE id=?', (income_id,))
+    conn.commit()
+    conn.close()
 def update_recurring_next_due(recurring_id: int, current_due: str):
     """
     After marking a recurring bill paid, bump its next_due based on frequency.

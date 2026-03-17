@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from budgetbuddy.db import init_db, get_categories, add_category, get_transactions, add_transaction, get_recurring, add_recurring, get_pay_schedule, set_pay_schedule
+from budgetbuddy.db import init_db, get_categories, add_category, get_transactions, add_transaction, get_recurring, add_recurring, get_pay_schedule, set_pay_schedule, get_incomes, add_income, update_income, delete_income
 import plotly.express as px
 from datetime import datetime, timedelta
 
@@ -11,7 +11,7 @@ def run_app():
     # Sidebar Navigation
     st.sidebar.title("Budget Buddy 🐶")
     page = st.sidebar.radio(
-        "Go to", ["Dashboard", "Transactions", "Recurring", "Pay Schedule", "Settings"]
+        "Go to", ["Dashboard", "Transactions", "Recurring", "Incomes", "Pay Schedule", "Settings"]
     )
     # Dashboard Page
     if page == "Dashboard":
@@ -85,6 +85,37 @@ def run_app():
                 cat_id = None
             add_recurring(name, amount, cat_id, frequency, next_due.isoformat())
             st.success("Recurring bill added!")
+    # Incomes Page
+    elif page == "Incomes":
+        st.title("Manage Incomes")
+        incs = get_incomes()
+        if incs:
+            for i in incs:
+                c1, c2, c3, c4, c5 = st.columns([2,1,1,1,1])
+                name = c1.text_input("Name", value=i['name'], key=f"inc_name_{i['id']}")
+                amount = c2.number_input("Amount", value=i['amount'], key=f"inc_amt_{i['id']}")
+                freq = c3.selectbox("Frequency", ["weekly","biweekly","monthly","yearly"], index=["weekly","biweekly","monthly","yearly"].index(i['frequency']), key=f"inc_freq_{i['id']}")
+                next_due = c4.date_input("Next Due", datetime.fromisoformat(i['next_due']), key=f"inc_due_{i['id']}")
+                if c5.button("Update", key=f"inc_update_{i['id']}"):
+                    update_income(i['id'], name, amount, freq, next_due.isoformat())
+                    st.success(f"Updated income {name}")
+                    st.experimental_rerun()
+                if c5.button("Delete", key=f"inc_delete_{i['id']}"):
+                    delete_income(i['id'])
+                    st.success(f"Deleted income {name}")
+                    st.experimental_rerun()
+        else:
+            st.write("No incomes defined.")
+        st.subheader("Add New Income")
+        new_name = st.text_input("Name", key="new_inc_name")
+        new_amount = st.number_input("Amount", value=0.0, key="new_inc_amt")
+        new_freq = st.selectbox("Frequency", ["weekly","biweekly","monthly","yearly"], key="new_inc_freq")
+        new_due = st.date_input("Next Due", datetime.today(), key="new_inc_due")
+        if st.button("Add Income", key="new_inc_add"):
+            add_income(new_name, new_amount, new_freq, new_due.isoformat())
+            st.success(f"Added income {new_name}")
+            st.experimental_rerun()
+
     # Pay Schedule Page
     elif page == "Pay Schedule":
         st.title("Pay Schedule")
